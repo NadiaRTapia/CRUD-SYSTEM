@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD Productos</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Gestión de Productos</h1>
+        <nav>
+            <a href="index.html">Listado</a>
+            <a href="crear.html">Crear Producto</a>
+        </nav>
+    </header>
+    <main>
+        <h2>Listado de Productos</h2>
+        <table class="productos-table">
+            <thead>
+                <tr>
+                    <th>Imagen</th>
+                    <th>Nombre</th>
+                    <th>Precio</th>
+                    <th>Precio Original</th>
+                    <th>Descripción</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Aquí irán los productos -->
+                <tr>
+                    <td><img src="https://via.placeholder.com/60" alt="Producto" class="img-mini"></td>
+                    <td>Ejemplo</td>
+                    <td>$100</td>
+                    <td>$150</td>
+                    <td>Descripción de ejemplo</td>
+                    <td>
+                        <a href="detalle.html">Ver</a> |
+                        <a href="editar.html">Editar</a> |
+                        <a href="#" class="eliminar">Eliminar</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+    <script type="module">
+        import { db } from './Firebase-config.js';
+        import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+        const tbody = document.querySelector('.productos-table tbody');
+        if (!tbody) {
+            alert('No se encontró la tabla de productos en el HTML.');
+            throw new Error('No se encontró la tabla de productos en el HTML.');
+        }
+
+        function renderProductos(snapshot) {
+            tbody.innerHTML = '';
+            if (snapshot.empty) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="6" style="text-align:center;color:#a18cd1;">No hay productos registrados.</td>`;
+                tbody.appendChild(tr);
+                return;
+            }
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><img src="${data.imagen}" alt="Producto" class="img-mini"></td>
+                    <td>${data.nombre}</td>
+                    <td>$${data.precio}</td>
+                    <td>$${data.precio_original}</td>
+                    <td>${data.descripcion}</td>
+                    <td>
+                        <a href="detalle.html?id=${doc.id}">Ver</a> |
+                        <a href="editar.html?id=${doc.id}">Editar</a> |
+                        <a href="#" class="eliminar" data-id="${doc.id}">Eliminar</a>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        try {
+            onSnapshot(collection(db, 'product'), renderProductos, (error) => {
+                alert('Error al conectar con Firestore: ' + error.message);
+                console.error('Firestore error:', error);
+            });
+        } catch (err) {
+            alert('Error general: ' + err.message);
+            console.error('General error:', err);
+        }
+    </script>
+</body>
+</html>
